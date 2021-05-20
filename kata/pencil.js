@@ -82,7 +82,7 @@ class Pencil {
         } else if (this.eraser === 0) {
             throw new Error ("No more eraser left! Time to get a new pencil!");
         } else {
-
+            paper.erased = lastOccurance;
             for (let i = 0; i < wordLength; i++) {
                 if (this.eraser !== 0) {
                     erasedWord += " ";
@@ -97,6 +97,81 @@ class Pencil {
         result += secondHalf;
         paper.text = result;
         return paper;
+    }
+
+    edit(wordToAdd, paper) {
+        // need to add tracking location for last word erased from paper
+        // can add queue for index lcoations of text removed (for multiple edits if needed)
+        // will start with just one edit location and then move to adding multiple 
+        // can add tracking lcoation to paper since that's where erasing happens
+        // need to update erase method to add location to paper object
+        // so this method will grab that property off paper
+        // then similar to erase, build first part of string, then edit portion, and end part
+        // add all back up together at end to create a new string
+        // also need to degrade pencil
+
+        let result = "";
+        let editedWord = "";
+        const wordLength = wordToAdd.length;
+        const firstPart = paper.text.slice(0, paper.erased);
+        const editPart = paper.text.slice(paper.erased, paper.erased + wordLength)
+        const lastPart = paper.text.slice(paper.erased + wordLength);
+
+        // check if there has been anything erased before moving forward with editing
+        if (!paper.erased) {
+            throw new Error("Nothing has been previously erased to add new text to")
+        } else {
+
+            for (let i = 0; i < editPart.length; i++) {
+                // if curent index of paper text is whitespace, add current character of wordToAdd to editedWord
+                if (editPart[i] === " ") {
+                    let current = this.editWrite(wordToAdd[i]);
+                    if (!current) {
+                        break;
+                    } else {
+                        editedWord += current;
+                    }
+                } else {
+                    let current = this.editWrite("@");
+                    if (!current) {
+                        break;
+                    } else {
+                        editedWord += current;
+                    }
+                }
+            }
+        }
+        result += firstPart;
+        result += editedWord;
+        result += lastPart;
+        paper.text = result;
+        return paper;
+    }
+
+    editWrite(letter) {
+        //need to check if capital, lowercase, whitespace
+        const pointDull = this.point === 0;
+
+        if (pointDull) {
+            return false; //no more writing can be done because out of point value
+        } else {
+            const currentChar = letter;
+            const lowerCase = currentChar.toLowerCase() === currentChar;
+            const whiteSpace = currentChar.trim().length !== 0;
+
+            // if lowercase point - 1
+            // if uppercase point - 2
+            // if whitespace point - 0
+            if (lowerCase && whiteSpace) {
+                this.point--;
+                return letter;
+            } else if (!lowerCase && whiteSpace) {
+                this.point -= 2;
+                return letter;
+            } else {
+                return letter;
+            }
+        }
     }
 }
 
