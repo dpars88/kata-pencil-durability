@@ -1,9 +1,9 @@
 class Pencil {
-    constructor(point, size, eraser) {
-        this.originalPoint = point || 50;
-        this.point = point || 50;
-        this.size = size || 10;
-        this.eraser = eraser || 50;
+    constructor( { point = 50, size = 0, eraser = 50 } = {}) {
+        this.originalPoint = point;
+        this.point = point;
+        this.size = size;
+        this.eraser = eraser;
     }
 
     write(text, paper) {
@@ -47,8 +47,7 @@ class Pencil {
         // first check if pencil has any length left to sharpen, if not throw error
         // if already sharpened do not sharpen again
         // sharpen pencil by restoring point back to original point and reduce length by 1
-
-        if (this.length === 0) { 
+        if (this.size === 0) { 
             throw new Error("Pencil out of length")
         } else if (this.point === this.originalPoint) { 
             throw new Error("Pencil already sharpened")
@@ -83,6 +82,7 @@ class Pencil {
             throw new Error ("No more eraser left! Time to get a new pencil!");
         } else {
             paper.erased = lastOccurance;
+            paper.erasedStack.push(lastOccurance);
             for (let i = 0; i < wordLength; i++) {
                 if (this.eraser !== 0) {
                     erasedWord += " ";
@@ -110,43 +110,47 @@ class Pencil {
         // add all back up together at end to create a new string
         // also need to degrade pencil
 
-        let result = "";
-        let editedWord = "";
-        const wordLength = wordToAdd.length;
-        const firstPart = paper.text.slice(0, paper.erased);
-        const editPart = paper.text.slice(paper.erased, paper.erased + wordLength)
-        const lastPart = paper.text.slice(paper.erased + wordLength);
-
         // check if there has been anything erased before moving forward with editing
         if (!paper.erased) {
             throw new Error("Nothing has been previously erased to add new text to")
         } else {
-
+            let result = "";
+            let editedWord = "";
+            const wordLength = wordToAdd.length;
+            const firstPart = paper.text.slice(0, paper.erased);
+            const editPart = paper.text.slice(paper.erased, paper.erased + wordLength)
+            const lastPart = paper.text.slice(paper.erased + wordLength);
             for (let i = 0; i < editPart.length; i++) {
                 // if curent index of paper text is whitespace, add current character of wordToAdd to editedWord
                 if (editPart[i] === " ") {
                     let current = this.editWrite(wordToAdd[i]);
                     if (!current) {
-                        break;
+                        editedWord += editPart[i];
                     } else {
                         editedWord += current;
                     }
                 } else {
                     let current = this.editWrite("@");
                     if (!current) {
-                        break;
+                        editedWord += editPart[i];
                     } else {
                         editedWord += current;
                     }
                 }
-            }
+            };
+        paper.erasedStack.pop();
+        if (paper.erasedStack.length === 0) {
+            paper.erased = false;
+        } else {
+            paper.erased = paper.erasedStack[0];
         }
         result += firstPart;
         result += editedWord;
         result += lastPart;
         paper.text = result;
         return paper;
-    }
+        };
+    };
 
     editWrite(letter) {
         //need to check if capital, lowercase, whitespace
