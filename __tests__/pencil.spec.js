@@ -101,6 +101,26 @@ describe("Erase method", () => {
       expect(() => {pencil.erase("sad", blankPaper)}).toThrow("Word to erase is not located within given paper");
     });
   });
+  describe("Pencil throws error when trying to erase with no eraser value left", () => {
+    const pencil = new Pencil({eraser: 0});
+    const erase = "TDD is fun but perfecting TDD is more fun!"; // counts 11 characters, 6 for capital, 5 for lowercase
+    const blankPaper = new Paper();
+    pencil.write(erase, blankPaper);
+    
+    test("it shouldn't erase given word due to not enough eraser value and throw correct error", () => {
+      expect(() => {pencil.erase("fun", blankPaper)}).toThrow("No more eraser left! Time to get a new pencil!");
+    });
+    describe("Pencil should stop erasing in middle of word if eraser value runs out in the middle of word", () => {
+      const pencil = new Pencil({eraser: 2});
+      const erase = "TDD is fun but perfecting TDD is more fun!"; // counts 11 characters, 6 for capital, 5 for lowercase
+      const blankPaper = new Paper();
+      pencil.write(erase, blankPaper);
+      pencil.erase("fun", blankPaper)
+      test("it shouldn't erase given word due to not enough eraser value and throw correct error", () => {
+        expect(blankPaper.text).toBe("TDD is fun but perfecting TDD is more   n!");
+      });
+    });
+  });
 });
 
 describe("Edit method", () => {
@@ -179,6 +199,32 @@ describe("Edit method", () => {
     test("it should return the sentence with the last 'fun' replaced with 'yay'", () => {
       pencil.edit("yay", blankPaper);
       expect(blankPaper.text).toBe("TDD is fun but perfecting you is more yay!");
+    });
+  });
+  describe("EditWrite method", () => {
+    describe("Edit write method takes into account capital/lowercase letters and whitespace when edit method is called", () => {
+      const pencil = new Pencil({size: 10});
+      const mantra = "An apple a day keeps the doctor away"; // 30 characters, 1 capital 28 lowercase 50 point, 20 left
+      const blankPaper = new Paper();
+      pencil.write(mantra, blankPaper);
+      pencil.erase("apple a day", blankPaper); // Should take away 9 from eraser
+      pencil.edit("onion a mni", blankPaper); // Should take away 9 from pencil point, 11
+
+      test("it should add 'onion a mni' to space left when apple a day", () => {
+        expect(blankPaper.text).toBe("An onion a mni keeps the doctor away");
+      });
+      test("it should degrade pencil point by correct amount when adding new word to paper", () => {
+        expect(pencil.point).toBe(11);
+      });
+      test("it should degrade eraser by correct amount when erasing word from paper", () => {
+        expect(pencil.eraser).toBe(41);
+      });
+      test("it should degrade point for capital letters", () => {
+        pencil.erase("mni", blankPaper);
+        pencil.edit("MIN", blankPaper)
+        expect(pencil.point).toBe(5);
+        expect(pencil.eraser).toBe(38);
+      });
     });
   });
 });
